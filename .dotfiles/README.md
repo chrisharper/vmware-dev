@@ -1,13 +1,19 @@
-## Source
-https://www.atlassian.com/git/tutorials/dotfiles
+## OSX
+Fusion -> Bridged Networking  
+Fedora -> Server netinst -> boot options  
+inst.ks= https://github.com/chrisharper/vmware-dev/raw/refs/heads/master/.dotfiles/anaconda-ks.cfg
 
-## Setup
+Secretive -> .zshrc
+
+~/.ssh/config  
 ```
-git clone --bare git@github.com/chrisharper/dotfiles $HOME/.dotfiles
-alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-dotfiles checkout 
-dotfiles config --local status.showUntrackedFiles no
+Host dev.local  
+	ForwardAgent yes  
 ```
+ssh-copy-id charper@dev.local 
+
+## Dotfiles
+https://www.atlassian.com/git/tutorials/dotfiles
 
 ### Operations
 ```
@@ -15,3 +21,7 @@ dotfiles add .tmux.conf
 dotfiles commit -m "Add .tmux.conf"
 dotfiles push
 ```
+
+
+
+
