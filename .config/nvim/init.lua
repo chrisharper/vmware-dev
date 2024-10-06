@@ -24,16 +24,20 @@ vim.opt.wildmode = { 'list', 'longest' }                -- Command-line completi
 vim.opt.wrap = false                                    -- Disable line wrap
 
 vim.g.mapleader = ' '
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
+
+-- Auto-install lazy.nvim if not present
+if not vim.uv.fs_stat(lazypath) then
+  print('Installing lazy.nvim....')
   vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
+    'git',
+    'clone',
+    '--filter=blob:none',
+    'https://github.com/folke/lazy.nvim.git',
+    '--branch=stable', -- latest stable release
     lazypath,
   })
+  print('Done.')
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -70,55 +74,60 @@ require('lazy').setup({
       require('telescope').load_extension('fzf')
     end 
   },
-{
-  'VonHeikemen/lsp-zero.nvim',
-  branch = 'v2.x',
-  dependencies = {
-    -- LSP Support
-    {'neovim/nvim-lspconfig'},             -- Required
-    {                                      -- Optional
-      'williamboman/mason.nvim',
-      build = function()
-        pcall(vim.cmd, 'MasonUpdate')
-      end,
-    },
-    {'williamboman/mason-lspconfig.nvim'}, -- Optional
+  {'VonHeikemen/lsp-zero.nvim', branch = 'v4.x'},
+  {'williamboman/mason.nvim'},
+  {'williamboman/mason-lspconfig.nvim'},
+  {'neovim/nvim-lspconfig'},
+  {'hrsh7th/cmp-nvim-lsp'},
+  {'hrsh7th/nvim-cmp'},
 
-    -- Autocompletion
-    {'hrsh7th/nvim-cmp'},     -- Required
-    {'hrsh7th/cmp-nvim-lsp'}, -- Required
-    {'L3MON4D3/LuaSnip'},     -- Required
-    {'hrsh7th/cmp-buffer'},     -- Optional
-    {'hrsh7th/cmp-path'},     -- Optional
-    {'hrsh7th/cmp-nvim-lsp'},     -- Optional
+})
+
+local lsp_zero = require('lsp-zero')
+
+local lsp_attach = function(client, bufnr)
+  local opts = {buffer = bufnr}
+
+  vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
+  vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+  vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+  vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+  vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
+  vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+  vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
+  vim.keymap.set('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+  vim.keymap.set({'n', 'x'}, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
+  vim.keymap.set('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+end
+
+lsp_zero.extend_lspconfig({
+  sign_text = true,
+  lsp_attach = lsp_attach,
+  capabilities = require('cmp_nvim_lsp').default_capabilities()
+})
+
+require('mason').setup({})
+require('mason-lspconfig').setup({
+  handlers = {
+    function(server_name)
+      require('lspconfig')[server_name].setup({})
+    end,
   }
-}
-,
-},{})
-
-
-local lsp = require('lsp-zero').preset({})
-
-lsp.on_attach(function(client, bufnr)
-  lsp.default_keymaps({buffer = bufnr})
-end)
-
-require('lspconfig').lua_ls.setup(lsp.nvim_lua_ls())
-
-lsp.setup()
-
+})
 
 local cmp = require('cmp')
 
-
 cmp.setup({
   sources = {
-    {name = 'path'},
     {name = 'nvim_lsp'},
-    {name = 'buffer', keyword_length = 3},
   },
-  mapping = {
-  }
+  snippet = {
+    expand = function(args)
+      -- You need Neovim v0.10 to use vim.snippet
+      vim.snippet.expand(args.body)
+    end,
+  },
+  mapping = cmp.mapping.preset.insert({}),
 })
 
 -- telescope
