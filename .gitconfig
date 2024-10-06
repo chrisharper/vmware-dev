@@ -1,0 +1,12 @@
+[user]
+	email = charper+git@charper.co.uk
+	name = Chris Harper
+[push]
+    default = simple
+[commit]
+	verbose = true
+	gpgsign = true
+[core]
+	editor = nvim
+[gpg]
+	format = ssh
